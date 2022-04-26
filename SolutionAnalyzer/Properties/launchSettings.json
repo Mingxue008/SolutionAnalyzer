@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "SolutionAnalyzer": {
+      "commandName": "Project",
+      "commandLineArgs": "D:\\work\\TestProjects"
+    }
+  }
+}
