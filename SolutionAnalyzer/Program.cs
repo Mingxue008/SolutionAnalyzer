@@ -9,7 +9,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SolutionAnalyzer
@@ -18,81 +17,34 @@ namespace SolutionAnalyzer
     {
         static async Task Main(string[] args)
         {
-            // Attempt to set the version of MSBuild.
-            var visualStudioInstances = MSBuildLocator.QueryVisualStudioInstances().ToArray();
-            var instance = visualStudioInstances.Length == 1
-                // If there is only one instance of MSBuild on this machine, set that as the one to use.
-                ? visualStudioInstances[0]
-                // Handle selecting the version of MSBuild you want to use.
-                : SelectVisualStudioInstance(visualStudioInstances);
-
-            Console.WriteLine($"Using MSBuild at '{instance.MSBuildPath}' to load projects.");
-
-            // NOTE: Be sure to register an instance with the MSBuildLocator 
-            //       before calling MSBuildWorkspace.Create()
-            //       otherwise, MSBuildWorkspace won't MEF compose.
-            MSBuildLocator.RegisterInstance(instance);
-
-            using (var workspace = MSBuildWorkspace.Create())
+            CommandArgumentParser argumentParser = new CommandArgumentParser();
+            if (!argumentParser.HandleCommand(args))
             {
-                // Print message for WorkspaceFailed event to help diagnosing project load failures.
-                workspace.WorkspaceFailed += (o, e) => Console.WriteLine(e.Diagnostic.Message);
-
-                var solutionPath = args[0];
-                var solutionFiles = Directory.EnumerateFiles(solutionPath, "*.sln", SearchOption.AllDirectories).ToList();
-                for(int i = 0; i < solutionFiles.Count(); i++)
-                {
-                    var solutionFile = solutionFiles[i];
-                    Console.WriteLine();
-                    Console.WriteLine($"{i:00} - Loading solution '{solutionFile}'");
-
-                    // Attach progress reporter so we print projects as they are loaded.
-                    var solution = await workspace.OpenSolutionAsync(solutionFile, new ConsoleProgressReporter());
-
-                    Console.WriteLine($"Finished loading solution '{solutionFile}'");
-
-                    workspace.CloseSolution();
-                }
-
-                // TODO: Do analysis on the projects in the loaded solution
-            }
-        }
-
-        private static VisualStudioInstance SelectVisualStudioInstance(VisualStudioInstance[] visualStudioInstances)
-        {
-            Console.WriteLine("Multiple installs of MSBuild detected please select one:");
-            for (int i = 0; i < visualStudioInstances.Length; i++)
-            {
-                Console.WriteLine($"Instance {i + 1}");
-                Console.WriteLine($"    Name: {visualStudioInstances[i].Name}");
-                Console.WriteLine($"    Version: {visualStudioInstances[i].Version}");
-                Console.WriteLine($"    MSBuild Path: {visualStudioInstances[i].MSBuildPath}");
+                return;
             }
 
-            while (true)
+            if (!Utilities.RegisterVisualStudioInstance(argumentParser))
             {
-                var userResponse = Console.ReadLine();
-                if (int.TryParse(userResponse, out int instanceNumber) &&
-                    instanceNumber > 0 &&
-                    instanceNumber <= visualStudioInstances.Length)
-                {
-                    return visualStudioInstances[instanceNumber - 1];
-                }
-                Console.WriteLine("Input not accepted, try again.");
+                Console.WriteLine($"MSBuild path {argumentParser.VisualStudioMSBuildPath} is invalid.");
+                return;
             }
-        }
 
-        private class ConsoleProgressReporter : IProgress<ProjectLoadProgress>
-        {
-            public void Report(ProjectLoadProgress loadProgress)
+            if (!Utilities.IsSolutionFileValid(argumentParser.SolutionPath))
             {
-                var projectDisplay = Path.GetFileName(loadProgress.FilePath);
-                if (loadProgress.TargetFramework != null)
-                {
-                    projectDisplay += $" ({loadProgress.TargetFramework})";
-                }
+                Console.WriteLine($"{argumentParser.SolutionPath} is invalid.");
+                return;
+            }
 
-                Console.WriteLine($"{loadProgress.Operation,-15} {loadProgress.ElapsedTime,-15:m\\:ss\\.fffffff} {projectDisplay}");
+            // Restore nuget packages.
+            Utilities.RestorePackages(argumentParser.SolutionPath);
+
+            Solution analyzeResult = await SolutionAnalyzer.AnalyzeSolution(argumentParser.SolutionPath);
+            if (analyzeResult != null)
+            {
+                foreach(var project in analyzeResult.Projects)
+                {
+                    Utilities.PrintDependencies(project);
+                }
             }
         }
     }
