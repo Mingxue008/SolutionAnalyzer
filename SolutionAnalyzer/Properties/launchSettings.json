@@ -2,7 +2,7 @@
   "profiles": {
     "SolutionAnalyzer": {
       "commandName": "Project",
-      "commandLineArgs": "D:\\work\\TestProjects"
+      "commandLineArgs": "-b \"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\" -s \"D:\\work\\TestProjects\\net472\\Community-Medicine-System\\CommunityMedicineSystem.sln\""
     }
   }
 }
