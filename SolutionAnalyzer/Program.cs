@@ -1,14 +1,5 @@
-﻿using Microsoft.Build.Locator;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Symbols;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.MSBuild;
-using Microsoft.CodeAnalysis.Text;
+﻿using Microsoft.CodeAnalysis;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace SolutionAnalyzer
@@ -23,12 +14,6 @@ namespace SolutionAnalyzer
                 return;
             }
 
-            if (!Utilities.RegisterVisualStudioInstance(argumentParser))
-            {
-                Console.WriteLine($"MSBuild path {argumentParser.VisualStudioMSBuildPath} is invalid.");
-                return;
-            }
-
             if (!Utilities.IsSolutionFileValid(argumentParser.SolutionPath))
             {
                 Console.WriteLine($"{argumentParser.SolutionPath} is invalid.");
@@ -38,7 +23,13 @@ namespace SolutionAnalyzer
             // Restore nuget packages.
             Utilities.RestorePackages(argumentParser.SolutionPath);
 
-            Solution analyzeResult = await SolutionAnalyzer.AnalyzeSolution(argumentParser.SolutionPath);
+            if (!Analyzer.RegisterVisualStudioInstance(argumentParser.VisualStudioMSBuildPath))
+            {
+                Console.WriteLine($"MSBuild path {argumentParser.VisualStudioMSBuildPath} is invalid.");
+                return;
+            }
+
+            Solution analyzeResult = await Analyzer.AnalyzeSolution(argumentParser.SolutionPath);
             if (analyzeResult != null)
             {
                 foreach(var project in analyzeResult.Projects)

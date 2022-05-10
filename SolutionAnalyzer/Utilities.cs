@@ -1,36 +1,12 @@
-﻿using Microsoft.Build.Locator;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SolutionAnalyzer
 {
     internal class Utilities
     {
-        public static bool RegisterVisualStudioInstance(CommandArgumentParser parser)
-        {
-            // Enumerate valid visual studio instances.
-            var visualStudioInstances = MSBuildLocator.QueryVisualStudioInstances().ToArray();
-            
-            // Find the valid one from user input.
-            foreach (var visualStudioInstance in visualStudioInstances)
-            {
-                if (visualStudioInstance != null && 
-                    visualStudioInstance.MSBuildPath.Contains(parser.VisualStudioMSBuildPath))
-                {
-                    MSBuildLocator.RegisterInstance(visualStudioInstance);
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
         public static bool IsSolutionFileValid(string solutionPath)
         {
             return (!string.IsNullOrEmpty(solutionPath) && File.Exists(solutionPath));
