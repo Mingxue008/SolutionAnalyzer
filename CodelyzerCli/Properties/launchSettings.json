@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CodelyzerCli": {
+      "commandName": "Project",
+      "commandLineArgs": "D:\\work\\TestProjects"
+    }
+  }
+}

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Codelyzer.Analysis" Version="2.4.5-alpha-ge379991656" />
+    <PackageReference Include="Codelyzer.Analysis.Model" Version="2.4.5-alpha-ge379991656" />
+  </ItemGroup>
+
+</Project>
