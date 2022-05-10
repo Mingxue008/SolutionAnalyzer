@@ -1,10 +1,9 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using Microsoft.Build.Locator;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.MSBuild;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SolutionAnalyzer
@@ -23,8 +22,27 @@ namespace SolutionAnalyzer
         }
     }
 
-    internal class SolutionAnalyzer
+    public class Analyzer
     {
+        public static bool RegisterVisualStudioInstance(string msBuildPath)
+        {
+            // Enumerate valid visual studio instances.
+            var visualStudioInstances = MSBuildLocator.QueryVisualStudioInstances().ToArray();
+
+            // Find the valid one from user input.
+            foreach (var visualStudioInstance in visualStudioInstances)
+            {
+                if (visualStudioInstance != null &&
+                    visualStudioInstance.MSBuildPath.Contains(msBuildPath))
+                {
+                    MSBuildLocator.RegisterInstance(visualStudioInstance);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public static Task<Solution> AnalyzeSolution(string solutionPath)
         {
             using (var workspace = MSBuildWorkspace.Create())
